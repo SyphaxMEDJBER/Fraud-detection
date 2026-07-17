@@ -1,0 +1,31 @@
+# Environnement virtuel
+venv/
+__pycache__/
+*.pyc
+
+# Données (trop volumineuses / sensibles pour Git)
+data/raw/*.csv
+data/processed/*
+!data/processed/.gitkeep
+
+# Modèles entraînés
+models/*.pkl
+models/*.joblib
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Notebooks : checkpoints Jupyter
+.ipynb_checkpoints/
+
+# Secrets / config locale
+.env
+
+# Éditeurs / OS
+.vscode/
+.DS_Store
+
+# Tests / couverture
+.pytest_cache/
+.coverage
