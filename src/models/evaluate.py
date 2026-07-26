@@ -1,5 +1,7 @@
 """Évaluation d'un modèle avec des métriques adaptées à un dataset déséquilibré (pas l'accuracy)."""
 
+import mlflow
+import mlflow.sklearn
 from sklearn.metrics import (
     average_precision_score,
     confusion_matrix,
@@ -17,13 +19,27 @@ def evaluate_model(model, X_test, y_test):
     # (à quel point le modèle est "confiant" que c'est une fraude), pas juste 0/1.
     y_proba = model.predict_proba(X_test)[:, 1]
 
+    precision = precision_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
+    roc_auc = roc_auc_score(y_test, y_proba)
+    pr_auc = average_precision_score(y_test, y_proba)
+
     print("Matrice de confusion (lignes = réel, colonnes = prédit) :")
     print("           prédit=0   prédit=1")
     matrix = confusion_matrix(y_test, y_pred)
     print(f"réel=0     {matrix[0][0]:>8}   {matrix[0][1]:>8}")
     print(f"réel=1     {matrix[1][0]:>8}   {matrix[1][1]:>8}")
 
-    print(f"\nPrecision : {precision_score(y_test, y_pred):.4f}")
-    print(f"Recall    : {recall_score(y_test, y_pred):.4f}")
-    print(f"ROC-AUC   : {roc_auc_score(y_test, y_proba):.4f}")
-    print(f"PR-AUC    : {average_precision_score(y_test, y_proba):.4f}")
+    print(f"\nPrecision : {precision:.4f}")
+    print(f"Recall    : {recall:.4f}")
+    print(f"ROC-AUC   : {roc_auc:.4f}")
+    print(f"PR-AUC    : {pr_auc:.4f}")
+
+    # On écrit les résultats ("la note du plat") sur la fiche MLflow ouverte par le
+    # script appelant, plus le modèle entraîné lui-même pour pouvoir le réutiliser
+    # plus tard sans le réentraîner.
+    mlflow.log_metric("precision", precision)
+    mlflow.log_metric("recall", recall)
+    mlflow.log_metric("roc_auc", roc_auc)
+    mlflow.log_metric("pr_auc", pr_auc)
+    mlflow.sklearn.log_model(model, "model")
