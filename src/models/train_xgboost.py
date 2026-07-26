@@ -1,5 +1,6 @@
 """Entraîne un XGBoost sur le train rééquilibré par SMOTE, évalue sur le vrai test set."""
 
+import mlflow
 from xgboost import XGBClassifier
 
 from src.data.balance_data import apply_smote
@@ -7,6 +8,7 @@ from src.data.split_data import load_train_test
 from src.models.evaluate import evaluate_model
 
 RANDOM_STATE = 42
+N_ESTIMATORS = 100
 
 
 def train_xgboost():
@@ -17,12 +19,16 @@ def train_xgboost():
     # à Random Forest, les arbres ne sont pas indépendants : l'Arbre n°2 est construit pour
     # corriger les erreurs de l'Arbre n°1, l'Arbre n°3 corrige ce qu'il reste après les 2
     # premiers, etc. (boosting = construction séquentielle, chaque arbre corrige le précédent).
-    model = XGBClassifier(n_estimators=100, random_state=RANDOM_STATE, eval_metric="logloss")
+    model = XGBClassifier(n_estimators=N_ESTIMATORS, random_state=RANDOM_STATE, eval_metric="logloss")
     model.fit(X_train_balanced, y_train_balanced)
 
     return model, X_test, y_test
 
 
 if __name__ == "__main__":
-    model, X_test, y_test = train_xgboost()
-    evaluate_model(model, X_test, y_test)
+    with mlflow.start_run(run_name="xgboost"):
+        mlflow.log_param("model_type", "XGBClassifier")
+        mlflow.log_param("n_estimators", N_ESTIMATORS)
+
+        model, X_test, y_test = train_xgboost()
+        evaluate_model(model, X_test, y_test)
