@@ -43,3 +43,7 @@ def evaluate_model(model, X_test, y_test):
     mlflow.log_metric("roc_auc", roc_auc)
     mlflow.log_metric("pr_auc", pr_auc)
     mlflow.sklearn.log_model(model, "model")
+
+    # Renvoyé en plus de l'affichage : permet de tester la fonction (vérifier les
+    # valeurs) sans avoir à parser le texte affiché dans le terminal.
+    return {"precision": precision, "recall": recall, "roc_auc": roc_auc, "pr_auc": pr_auc}
