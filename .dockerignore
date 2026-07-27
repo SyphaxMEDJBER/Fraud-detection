@@ -1,0 +1,14 @@
+# venv/ : Docker installe ses PROPRES dépendances via requirements.txt à l'intérieur
+# du container -> pas besoin (et énormément de place gaspillée) de copier ton venv local.
+venv/
+.git/
+__pycache__/
+*.pyc
+.pytest_cache/
+mlruns/
+mlartifacts/
+.ipynb_checkpoints/
+
+# fraud.db est régénéré par load_data.py au démarrage du container (voir CMD du
+# Dockerfile), pas besoin de le copier depuis ta machine.
+data/processed/*
