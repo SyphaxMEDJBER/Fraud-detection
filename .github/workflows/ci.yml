@@ -1,0 +1,40 @@
+# Nom affiché dans l'onglet "Actions" de GitHub.
+name: CI
+
+# Quand se déclencher : à chaque push sur main, et à chaque pull request visant main
+# (donc aussi avant de merger une PR -> on voit si les tests passent avant de fusionner).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    # Machine virtuelle fournie par GitHub sur laquelle les étapes s'exécutent (jetable,
+    # recréée à chaque run -> comme le container Docker, environnement propre à chaque fois).
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperer le code du repo
+        uses: actions/checkout@v4
+
+      - name: Installer Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          # Met en cache les librairies déjà téléchargées lors d'un run précédent ->
+          # les prochains runs sont plus rapides (la machine reste neuve, seul le
+          # téléchargement répété est évité).
+          cache: "pip"
+
+      - name: Installer les dependances
+        run: pip install -r requirements.txt
+
+      # Le vrai creditcard.csv (150 Mo) n'est pas dans le repo -> on utilise le petit
+      # echantillon de test committe dans tests/fixtures/ pour remplir fraud.db.
+      - name: Charger l'echantillon de test dans SQLite
+        run: python -c "from pathlib import Path; from src.data.load_data import load_csv_to_sqlite; load_csv_to_sqlite(csv_path=Path('tests/fixtures/sample_creditcard.csv'))"
+
+      - name: Lancer les tests
+        run: python -m pytest tests/ -v
