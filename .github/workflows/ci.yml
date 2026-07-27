@@ -38,3 +38,35 @@ jobs:
 
       - name: Lancer les tests
         run: python -m pytest tests/ -v
+
+  # CD : construit l'image Docker et la publie, mais seulement si "test" a reussi
+  # (needs: test) et seulement sur main (pas sur les branches de PR).
+  build-and-push:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    # Autorise ce job a publier des packages (l'image Docker) sur GitHub Container Registry.
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Recuperer le code du repo
+        uses: actions/checkout@v4
+
+      # Connexion a ghcr.io avec le token automatique fourni par GitHub Actions
+      # (GITHUB_TOKEN) -> pas besoin de creer/gerer un mot de passe a part.
+      - name: Se connecter a GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construire et publier l'image Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/syphaxmedjber/fraud-detection:latest
